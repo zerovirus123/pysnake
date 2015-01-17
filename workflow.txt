@@ -1,0 +1,21 @@
+git branch
+
+git checkout develop
+
+git pull --rebase
+
+-------------------
+
+"add your own content and stuff"
+
+git status
+
+git add
+or
+git rm
+
+git commit -m "descriptive commit message"
+
+git push origin your_branch
+
+--------------------
