@@ -36,19 +36,21 @@ class snake_board():
 
 class snake():
 	def __init__():
-		dead = False
-		score = 0
-		body_length = 3	
-		head = [9,9]
-		body = [[10,10], [11,11], [12,12]]
+	    dead = False
+	    score = 0
+	    body_length = 3	
+	    head = [9,9]
+	    body = [[10,10], [11,11], [12,12]]
 
 
 	def collide():
-		if head in body:
-			snake.dead = True
-		if head[row]<0 or head[row]>=board_size or head[col]<0 \
-			or head[col] >= board_size: 
-			snake.dead = True
+	    if head in body:
+		snake.dead = True
+	    if head[row]<0 or head[row]>=board_size or head[col]<0 \
+	        or head[col] >= board_size: 
+		snake.dead = True
 
+	def move():
+	    pass
 
 
