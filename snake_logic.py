@@ -18,6 +18,7 @@ MOVE_DOWN = [0,1]
 MOVE_LEFT = [-1,0]
 MOVE_RIGHT = [1,0]
 
+
 class snake_board():
     """ for board, 0 for EMPTY, 1 for snake, 2 for APPLE
             """
@@ -57,7 +58,8 @@ class snake_board():
 		    pass #update with apple
 		else:
 		    pass #try exception
-                    
+             
+
 class Snake():
     def __init__():
         self.dead = False
@@ -92,6 +94,7 @@ class Snake():
 	    newTail = [tail[0]-1, tail[1]]
 	    self.body.append(newTail)
 
+
 def collision(snake, board):
     if snake.head in snake.body:
         snake.dead = True
@@ -108,6 +111,7 @@ def collision(snake, board):
             board.generate_apple()
             snake.grow()
 
+
 def main():
     #initializes board and snake object
     #wait for user moves. if not the snake moves in a straight line
@@ -122,4 +126,7 @@ def main():
 
     print "Oh noes. Game over.\n"
     sys.exit() 
-main
+
+
+if __name__ == "__main__":
+    main()
