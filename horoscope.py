@@ -2,8 +2,9 @@ import urllib2
 from BeautifulSoup import BeautifulSoup
 from itertools import takewhile, chain 
 
-horoscope_list = [ "Aries", "Tauros", "Gemini", "Cancer", "Leo", "Virgo", "Libra", "Scorpio", "Sagittarius", "Capricorn", "Aquarius", "Pisces"]
+horoscope_list = [ "aries", "tauros", "gemini", "cancer", "leo", "virgo", "libra", "scorpio", "sagittarius", "capricorn", "aquarius", "pisces"]
 
+"""
 urls = [
 	"http://my.horoscope.com/astrology/free-daily-horoscope-aries.html",
 	"http://my.horoscope.com/astrology/free-daily-horoscope-taurus.html",
@@ -18,7 +19,15 @@ urls = [
 	"http://my.horoscope.com/astrology/free-daily-horoscope-aquarius.html",
 	"http://my.horoscope.com/astrology/free-daily-horoscope-pisces.html"
 	]
+"""
 
+def getData(horoscope):
+    data = urllib2.urlopen( "http://my.horoscope.com/astrology/free-daily-horoscope-"+horoscope+".html")
+    soup = BeautifulSoup(data)
+    for words in soup.findAll(id='textline'):
+	print words.next, words.next_sibling
+
+"""
 def getData(horoscope):
 
     if horoscope == "Aries":
@@ -95,7 +104,7 @@ def getData(horoscope):
 
 	
 getData
-
+"""
 
 
 def main():
