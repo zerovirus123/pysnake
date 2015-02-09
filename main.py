@@ -1,4 +1,4 @@
-#!/bin/python
+#!/usr/bin/python
 #
 # Authors: (add yourself if you contribute)
 #   Justin Brown
