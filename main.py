@@ -15,7 +15,7 @@ Docstring all the things.
 """
 
 from __future__ import print_function
-# in python 3.x range is removed and xrange is renamed  to range
+# in python 3.x range is removed and xrange is renamed to range
 range = xrange
 
 import sys
@@ -37,7 +37,7 @@ class Color(object):
     """
     A container object for color definitions
     """
-    # "name"       r    g    b
+#   name           r    g    b
     RED       = (215, 000, 000)
     BLUE      = (000, 000, 220)
     GREEN     = (000, 185, 000)
