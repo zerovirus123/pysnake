@@ -1,12 +1,17 @@
 #!/usr/bin/python
 #
+# Date: 2015-02-09
+#
 # Authors: (add yourself if you contribute)
 #   Justin Brown
 #
-# Please use a ridiculous, obscene, or repugnant number of comments
-# and docstring everything
+# Contributing: Please use a ridiculous, obscene, or repugnant number of
+# accurate comments. Docstring all the things. To work on issue 14 you
+# should create a branch named branch_name-14 and if possible request or
+# assign yourself to the issue in the github tracker. When making commits
+# on your branch use a #refs 14 on one of the lines in the commit message.
 #
-# Pysnake
+# Description: Pysnake - a snake implementation using pygame
 # Use python 2.7.x but conform to 3.x if possible
 #
 
