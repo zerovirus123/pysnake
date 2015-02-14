@@ -120,10 +120,7 @@ class Board(object):
             # If we checked all positions and wrapped around to the original
             if xpos == original_xpos and ypos == original_ypos:
                 print("Checked the entire board, found no empty spots!")
-                stop_game()  # TODO : don't consider this an error?
-                # The snake and/or other objects would need to occupy the
-                # entire board for there to be no room to spawn an apple.
-                # Maybe make this a victory condition.
+                stop_game()
 
         # Place the apple at the chosen location.
         self.apple = (xpos, ypos)
@@ -236,11 +233,6 @@ class Pysnake(object):
         # determines the base game speed (higher value is slower pace)
         # for a given tick rate x, the FPS is 1/x
         self.BASE_TICK_RATE = 0.1 #0.075
-
-        # TODO : Along with the snake increasing in length for each apple
-        # eaten, there should be a level up system visually displayed.
-        # The min_resolution calculation and other drawing logic should
-        # be adapted to comepsnate for the new display area.
 
         # TODO : Allow for blasphemous rectangular dimensioned games to be set
 
