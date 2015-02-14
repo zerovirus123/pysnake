@@ -78,10 +78,6 @@ class Board(object):
         # it for a few frames
         self.droplets = list() # TODO : Add this visual affect
 
-        # TODO : Add enemy snakes
-        # TODO : Add enemy snake A.I. that seeks other apples randomly
-        # and grows in length
-
         # player starts by moving downward by default
         self.last_direction = 'D'
 
@@ -93,7 +89,7 @@ class Board(object):
         Spawns the player somewhere in the middle of the board.
         """
         # This is some sketchy arithmetic but it is okay as long
-        # as long as you dont put parantheses around (3/4)
+        # as long as you don't put parantheses around (3/4)
         # otherwise it is self.size*(0) in python2.x while *(0.75) in 3.x
         xpos = random.randint(self.size/4, self.size*3/4)
         ypos = random.randint(self.size/4, self.size*3/4)
