@@ -186,12 +186,12 @@ class Board(object):
         or (ypos >= self.size) \
         or (xpos < 0) \
         or (ypos < 0):
-            print("Snake went off the board!")
+            print("Pysnake traveled abroad!")
             stop_game()
 
         # if we run into ourselves, then we lose the game
         if (xpos, ypos) in self.snake:
-            print("Snake ran into its body!")
+            print("Pysnake hugged itself!")
             stop_game()
 
         #if not apple remove tail
