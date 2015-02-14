@@ -69,7 +69,6 @@ class Board(object):
         # a tuple (x,y) coordinates for current apple's location
         self.apple = tuple()
         self.size = size  # the number of board locations for both dimensions
-
         # when an apple spawns some blue rings spawn like ripples around
         # it for a few frames
         self.droplets = list() # TODO : Add this visual affect
