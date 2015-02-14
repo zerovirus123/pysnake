@@ -299,24 +299,6 @@ class Pysnake(object):
         Gets input to the game window.
         """
 
-        # TODO : The input system is faulty because if the game
-        # tick rate is slower than the user, directions will not
-        # be changed quickly enough. This is probably the biggest
-        # problem with the game currently.
-        # - -- - -- - -- - -- - -- - -- - -- - -- - -- - -- - --
-        # Example of problem:
-        # 1. Game updates and player is moving downwards
-        # 2. Player wants to turn around (180 degrees)
-        # 3. Player presses d to turn right
-        # 4. direction set to 'R', game still hasn't updated
-        # 5. Player presses w to turn upwards
-        # 6. direction overwritten to 'U', game ignored the 'R'
-        # 7. game finally updates but ignores movement because game does not
-        #    allow 180 degree turns in a single tick (see Board.move_player),
-        #    otherwise the player would kill themselves.
-        # 8. Player continues moving downwards as in step 1.
-        # 9. Player runs into the bottom of screen, etc.
-
         for event in pygame.event.get():
             if event.type == pygame.locals.QUIT:
                 stop_game()
