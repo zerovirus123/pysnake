@@ -66,7 +66,6 @@ class Board(object):
         
         Spawn a player and an apple object to start off the game.
         """
-        # deque of tuples describing the snake
         # the left end of the deque is the tail (x,y) position
         # the right end of the deque is the head
         self.snake = deque()
@@ -88,11 +87,11 @@ class Board(object):
         """
         Spawns the player somewhere in the middle of the board.
         """
-        # This is some sketchy arithmetic but it is okay as long
-        # as long as you don't put parantheses around (3/4)
-        # otherwise it is self.size*(0) in python2.x while *(0.75) in 3.x
+        # Careful order of operations with a python 2.7 int.
         xpos = random.randint(self.size/4, self.size*3/4)
         ypos = random.randint(self.size/4, self.size*3/4)
+
+        # Spawn the snake body (issue )
         self.snake.append((xpos, ypos))        # the snake's head
         self.snake.appendleft((xpos-1, ypos))  # center of body
         self.snake.appendleft((xpos-2, ypos))  # the snake's tail
@@ -105,21 +104,20 @@ class Board(object):
         """
         Finds an empty position to spawn an apple, and then places it there.
         """
+
+        # Get a random location on the board
         xpos = random.randint(0, self.size-1)
         ypos = random.randint(0, self.size-1)
 
-        # Loop through board positions until we return to where we started or
-        # find an empty position to place the apple
+        # Remember this location.
         original_xpos, original_ypos = xpos, ypos
 
-        # When adding more objects than only a snake, this will need to be
-        # changed to `while pos in game_objects` (some union of all objects)
-        # This could probably be done using a set, it may be a duplicate of
-        # the information already stored in the board data. A similar method
-        # as adding an apple will need to be implemented when adding any other
-        # object that cannot spawn in another.
+        # While that location is inside an object that we do not wish to spawn
+        # apples inside of:
         while (xpos, ypos) in self.snake:
+            # Increment through board positions
             xpos, ypos = self.next_pos(xpos, ypos)
+            # If we checked all positions and wrapped around to the original
             if xpos == original_xpos and ypos == original_ypos:
                 print("Checked the entire board, found no empty spots!")
                 stop_game()  # TODO : don't consider this an error?
@@ -127,6 +125,7 @@ class Board(object):
                 # entire board for there to be no room to spawn an apple.
                 # Maybe make this a victory condition.
 
+        # Place the apple at the chosen location.
         self.apple = (xpos, ypos)
 
     def next_pos(self, xpos, ypos):
@@ -153,9 +152,9 @@ class Board(object):
         Also spawns a new apple when one is eaten. If an apple was not eaten,
         the snake's tail is removed to preserve it's length.
         """
-        head = self.snake.pop()  # pop the head off and look at it
-        self.snake.append(head)  # put the head back on
-        xpos, ypos = head[0], head[1]  # get the location info from the head
+        length = len(self.snake)
+        head = self.snake[length-1]
+        xpos, ypos = head[0], head[1]  # get the location of the head
 
         # get new pos: note that video coordinate systems have the origin
         # start in the top left of the monitor, positive y is downward and
@@ -188,8 +187,7 @@ class Board(object):
         or (xpos < 0) \
         or (ypos < 0):
             print("Snake went off the board!")
-            stop_game()  # TODO : Maybe make this a non-error and
-            # incur a penalty instead or something
+            stop_game()
 
         # if we run into ourselves, then we lose the game
         if (xpos, ypos) in self.snake:
@@ -231,10 +229,12 @@ class Pysnake(object):
 
         # the edge size of each square in the game
         self.BOARD_ELEMENT_SIZE = 16
+
         # this is the number of positions, x and y, on the board
         self.BOARD_ELEMENTS = 32
+
         # determines the base game speed (higher value is slower pace)
-        # for a given tick rate x the fps is 1/x
+        # for a given tick rate x, the FPS is 1/x
         self.BASE_TICK_RATE = 0.1 #0.075
 
         # TODO : Along with the snake increasing in length for each apple
@@ -242,13 +242,14 @@ class Pysnake(object):
         # The min_resolution calculation and other drawing logic should
         # be adapted to comepsnate for the new display area.
 
-        # TODO : We should be able to draw text to the screen using a custom
-        # image based font system.
-
         # TODO : Allow for blasphemous rectangular dimensioned games to be set
 
         self.init_pygame()
         self.board = Board(self.BOARD_ELEMENTS)
+
+        # pysnake on drugs
+        self.skew = [0,0]
+        self.on_drugs = False
 
     def init_pygame(self):
         """
@@ -342,11 +343,12 @@ class Pysnake(object):
                 elif event.key == pygame.K_RIGHT \
                 or   event.key == pygame.K_d:
                     self.player_direction = 'R'
+                    self.on_drugs = not self.on_drugs
+                    self.skew = [0, 0]
 
                 elif event.key == pygame.K_SPACE:
                     # TODO : This should pause the game until pressed again
                     print("This should pause the game some day")
-                    pass
 
                 # admin/debug commands, etc
                 elif event.key == pygame.K_q:
@@ -364,22 +366,48 @@ class Pysnake(object):
         """
         Renders the game board based on its current state.
         """
+
+        # pysnake on drugs
+        if self.on_drugs:
+            for i in range(2):
+                R = random.randint(0, 1)
+                R2 = random.randint(0, 1)
+                add_skew = 0
+                add_skew += R if R2 else -R
+                self.skew[i] += add_skew
+
         SIZE = self.BOARD_ELEMENT_SIZE
 
         # paint the screen black
         self.screen.fill(Color.BLACK)
 
         # draw the apple
-        apple = self.board.apple
-        apple = (apple[0]*SIZE, apple[1]*SIZE)
-        apple = pygame.Rect(apple, (SIZE, SIZE))
-        pygame.draw.rect(self.screen, Color.RED, apple)
+        self.draw_rect(self.board.apple, Color.RED, self.skew)
 
         snake = self.board.snake
         for body in snake:
             # draw a snake body part
-            body = pygame.Rect(body[0]*SIZE, body[1]*SIZE, SIZE, SIZE)
-            pygame.draw.rect(self.screen, Color.GREEN, body)
+            self.draw_rect(body, Color.GREEN, self.skew)
+
+    def draw_rect(self, board_location, color, skew=(0,0)):
+        """
+        Takes a board (x,y) tuple location and determines the pixel coordinate
+        for the top-left pixel. With that and the size of board elements,
+        pygame can create a rectangle object for us (a square) and draw it.
+        """
+        size = self.BOARD_ELEMENT_SIZE
+
+        # pysnake on drugs
+        x_skew = skew[0]
+        y_skew = skew[1]
+
+        topleft_pixel = (board_location[0]*size,
+                         board_location[1]*size)
+        width_height = (size + x_skew, size + y_skew)
+        rect = pygame.Rect(topleft_pixel, width_height)
+        pygame.draw.rect(self.screen, color, rect)
+
+
 
 
 def stop_game():
