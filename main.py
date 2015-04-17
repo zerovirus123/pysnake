@@ -344,11 +344,8 @@ class Pysnake(object):
         # pysnake on drugs
         if self.on_drugs:
             for i in range(2):
-                R = random.randint(0, 1)
-                R2 = random.randint(0, 1)
-                add_skew = 0
-                add_skew += R if R2 else -R
-                self.skew[i] += add_skew
+                R = random.choice([-1, 0, 0, 1])
+                self.skew[i] += R
 
         SIZE = self.BOARD_ELEMENT_SIZE
 
