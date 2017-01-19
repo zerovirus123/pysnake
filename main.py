@@ -32,11 +32,9 @@ from collections import deque
 import pygame
 import pygame.locals
 
-
 # tell pygame to center the game window location
 # on your screen when it gets created.
 os.environ['SDL_VIDEO_CENTERED'] = "1"
-
 
 class Color(object):
     """
@@ -48,6 +46,12 @@ class Color(object):
     GREEN     = (000, 185, 000)
     BLACK     = (000, 000, 000)
 
+class Pause():
+    """
+    Holds the pause state of the game, that can be shared amongst all classes. Beats global variables all day every day!
+    """
+    pause = False
+
 
 class Board(object):
     """
@@ -55,6 +59,8 @@ class Board(object):
     The deque represents the snake's body positions (the right end
     of the deque is its head, while the left is its tail). The tuple
     represents the apple's location on the board.
+
+    |tail|   |    |    |    |    | head |
 
     The origin (0,0) is the top left of the screen where positive x
     is rightwards and positive y is downwards.
@@ -72,10 +78,11 @@ class Board(object):
 
         # a tuple (x,y) coordinates for current apple's location
         self.apple = tuple()
+        
         self.size = size  # the number of board locations for both dimensions
         # when an apple spawns some blue rings spawn like ripples around
         # it for a few frames
-        self.droplets = list() # TODO : Add this visual affect
+        self.droplets = list() # TODO : Add this visual effect
 
         # player starts by moving downward by default
         self.last_direction = 'D'
@@ -113,7 +120,7 @@ class Board(object):
         original_xpos, original_ypos = xpos, ypos
 
         # While that location is inside an object that we do not wish to spawn
-        # apples inside of:
+        # apples inside of (such as snake's body) :
         while (xpos, ypos) in self.snake:
             # Increment through board positions
             xpos, ypos = self.next_pos(xpos, ypos)
@@ -130,14 +137,15 @@ class Board(object):
         Find the next position given a board position, or wrapping around to
         (0, 0) if we are already at the last position (size-1, size-1)
         """
-        if xpos + 1 >= self.size:
-            xpos = 0
-            if ypos + 1 >= self.size:
-                return 0, 0
+        if Pause.pause == False:
+            if xpos + 1 >= self.size:
+                xpos = 0
+                if ypos + 1 >= self.size:
+                    return 0, 0
+                else:
+                    return xpos, ypos + 1
             else:
-                return xpos, ypos + 1
-        else:
-            return xpos + 1, ypos
+                return xpos + 1, ypos
 
     def move_player(self, direction):
         """
@@ -149,62 +157,66 @@ class Board(object):
         Also spawns a new apple when one is eaten. If an apple was not eaten,
         the snake's tail is removed to preserve it's length.
         """
-        length = len(self.snake)
-        head = self.snake[length-1]
-        xpos, ypos = head[0], head[1]  # get the location of the head
+        if Pause.pause == False:
+            length = len(self.snake)
+            head = self.snake[length-1]
+            xpos, ypos = head[0], head[1]  # get the location of the head
+     
+            # get new pos: note that video coordinate systems have the origin
+            # start in the top left of the monitor, positive y is downward and
+            # positive x is to the right.
+            if direction == 'D':
+                if self.last_direction == 'U':
+                    # If snake tries to move back in on itself, ignore it
+                    self.move_player(self.last_direction)
+                    return
+                ypos += 1
+            elif direction == 'U':
+                if self.last_direction == 'D':
+                    #snake tries to move up and into itself, ignore
+                    self.move_player(self.last_direction)
+                    return
+                ypos -= 1
+            elif direction == 'L':
+                if self.last_direction == 'R':
+                    #snake tries to move left into itself, ignore
+                    self.move_player(self.last_direction)
+                    return
+                xpos -= 1
+            elif direction == 'R':
+                if self.last_direction == 'L':
+                    #snake tries to move right into itself, ignore
+                    self.move_player(self.last_direction)
+                    return
+                xpos += 1
 
-        # get new pos: note that video coordinate systems have the origin
-        # start in the top left of the monitor, positive y is downward and
-        # positive x is to the right.
-        if direction == 'D':
-            if self.last_direction == 'U':
-                # If snake tries to move back in on itself, ignore it
-                self.move_player(self.last_direction)
-                return
-            ypos += 1
-        elif direction == 'U':
-            if self.last_direction == 'D':
-                self.move_player(self.last_direction)
-                return
-            ypos -= 1
-        elif direction == 'L':
-            if self.last_direction == 'R':
-                self.move_player(self.last_direction)
-                return
-            xpos -= 1
-        elif direction == 'R':
-            if self.last_direction == 'L':
-                self.move_player(self.last_direction)
-                return
-            xpos += 1
+            #if position is off the board, end the game
+            if (xpos >= self.size) \
+            or (ypos >= self.size) \
+            or (xpos < 0) \
+            or (ypos < 0):
+                print("Pysnake traveled abroad!")
+                stop_game()
 
-        #if position is off the board, end the game
-        if (xpos >= self.size) \
-        or (ypos >= self.size) \
-        or (xpos < 0) \
-        or (ypos < 0):
-            print("Pysnake traveled abroad!")
-            stop_game()
+            # if we run into ourselves, then we lose the game
+            if (xpos, ypos) in self.snake:
+                print("Pysnake hugged itself!")
+                stop_game()
 
-        # if we run into ourselves, then we lose the game
-        if (xpos, ypos) in self.snake:
-            print("Pysnake hugged itself!")
-            stop_game()
+            #if not apple remove tail
+            if (xpos, ypos) != self.apple:
+                self.snake.popleft()
 
-        #if not apple remove tail
-        if (xpos, ypos) != self.apple:
-            self.snake.popleft()
+            #else it was an apple, so spawn a new one
+            else:
+                self.spawn_apple()
+                # TODO : also increase the game level (up the speed)
 
-        #else it was an apple, so spawn a new one
-        else:
-            self.spawn_apple()
-            # TODO : also increase the game level (up the speed)
+            #add a new body part at the location
+            self.snake.append((xpos, ypos))
 
-        #add a new body part at the location
-        self.snake.append((xpos, ypos))
-
-        # save this direction so we dont allow reverse direction later
-        self.last_direction = direction
+            # save this direction so we dont allow reverse direction later
+            self.last_direction = direction
 
 
 class Pysnake(object):
@@ -242,6 +254,7 @@ class Pysnake(object):
         # pysnake on drugs
         self.skew = [0,0]
         self.on_drugs = False
+
 
     def init_pygame(self):
         """
@@ -291,7 +304,8 @@ class Pysnake(object):
         self.get_input()
         self.board.move_player(self.player_direction)
         self.draw_board()
-        self.window.update()
+        if Pause.pause == False:
+            self.window.update()
         time.sleep(self.BASE_TICK_RATE)
 
     def get_input(self):
@@ -322,8 +336,14 @@ class Pysnake(object):
 
                 elif event.key == pygame.K_SPACE:
                     # TODO : This should pause the game until pressed again
-                    print("This should pause the game some day")
-
+                    if Pause.pause == False:
+                        Pause.pause = True
+                        print("Game Paused\n")
+                    else:
+                        Pause.pause = False
+                        print("Resume game\n")
+                    
+                        
                 # admin/debug commands, etc
                 elif event.key == pygame.K_q:
                     self.BASE_TICK_RATE -= 0.01
