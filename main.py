@@ -41,10 +41,12 @@ class Color(object):
     A container object for color definitions
     """
 #   name           r    g    b
-    RED       = (215, 000, 000)
-    BLUE      = (000, 000, 220)
-    GREEN     = (000, 185, 000)
-    BLACK     = (000, 000, 000)
+    RED       = (215, 000, 000) #for apples
+    BLUE      = (000, 000, 220) #for extra tasty apaples
+    GREEN     = (000, 185, 000) #for sname body
+    BLACK     = (000, 000, 000) #for poison apple
+    GRAY      = (220, 220, 220) #for bad apple
+    BlUE_GREEN = (000,255,204)  #fancy background
 
 class Pause():
     """
@@ -52,6 +54,19 @@ class Pause():
     """
     pause = False
 
+class Score():
+    """
+    Holds the player's current score.
+    """
+    score = 0
+
+class Apple():
+    """
+    Holds the attributes of apples, such as type, points awarded/deducted, etc
+    """
+    apple_type = { "Gray": -10, "Red": 10, "Blue": 20  } #you die if you eat the black apple
+    type = "Red"
+    position = []
 
 class Board(object):
     """
@@ -77,7 +92,9 @@ class Board(object):
         self.snake = deque()
 
         # a tuple (x,y) coordinates for current apple's location
-        self.apple = tuple()
+        #self.apple = tuple()
+        Apple.type = "Red"
+        Apple.position = []
         
         self.size = size  # the number of board locations for both dimensions
         # when an apple spawns some blue rings spawn like ripples around
@@ -86,6 +103,9 @@ class Board(object):
 
         # player starts by moving downward by default
         self.last_direction = 'D'
+        
+        #holds the player's current score. score is incremented by eating apples
+        self.score = 0
 
         self.spawn_player()
         self.spawn_apple()
@@ -110,6 +130,11 @@ class Board(object):
     def spawn_apple(self):
         """
         Finds an empty position to spawn an apple, and then places it there.
+        
+        If user score is above 50, gray apple with negative value will spawn, along with regular apple.
+        
+        If user score is above 100, poisonous black apple will spawn. Eating it ends the game.
+        
         """
 
         # Get a random location on the board
@@ -120,8 +145,8 @@ class Board(object):
         original_xpos, original_ypos = xpos, ypos
 
         # While that location is inside an object that we do not wish to spawn
-        # apples inside of (such as snake's body) :
-        while (xpos, ypos) in self.snake:
+        # apples inside of snakes body, or a position with an existing apple :
+        while (xpos, ypos) in self.snake or (xpos, ypos) in Apple.position:
             # Increment through board positions
             xpos, ypos = self.next_pos(xpos, ypos)
             # If we checked all positions and wrapped around to the original
@@ -129,8 +154,19 @@ class Board(object):
                 print("Checked the entire board, found no empty spots!")
                 stop_game()
 
-        # Place the apple at the chosen location.
-        self.apple = (xpos, ypos)
+        #if user score is between 0 and 50
+        if Score.score < 50:
+            Apple.position.append( (xpos, ypos) )
+            pass
+        
+        #if user score is between 50 and 100
+        if Score.score >= 50 and Score.score < 100:
+            Apple.position.append( (xpos, ypos) )
+        
+        #if user score is above 100
+        if Score.score >= 100:
+            Apple.position.append( (xpos, ypos) )
+        
 
     def next_pos(self, xpos, ypos):
         """
@@ -157,7 +193,7 @@ class Board(object):
         Also spawns a new apple when one is eaten. If an apple was not eaten,
         the snake's tail is removed to preserve it's length.
         """
-        if Pause.pause == False:
+        if Pause.pause == False: #if game is not paused
             length = len(self.snake)
             head = self.snake[length-1]
             xpos, ypos = head[0], head[1]  # get the location of the head
@@ -204,13 +240,16 @@ class Board(object):
                 stop_game()
 
             #if not apple remove tail
-            if (xpos, ypos) != self.apple:
+            if (xpos, ypos) not in Apple.position:
                 self.snake.popleft()
 
             #else it was an apple, so spawn a new one
             else:
-                self.spawn_apple()
-                # TODO : also increase the game level (up the speed)
+                if (xpos, ypos) in Apple.position:
+                    while (xpos, ypos) in Apple.position: Apple.position.remove((xpos,ypos))
+                    Score.score += 10
+                    self.spawn_apple()
+                    # TODO : also increase the game level (up the speed)
 
             #add a new body part at the location
             self.snake.append((xpos, ypos))
@@ -304,8 +343,7 @@ class Pysnake(object):
         self.get_input()
         self.board.move_player(self.player_direction)
         self.draw_board()
-        if Pause.pause == False:
-            self.window.update()
+        self.window.update()
         time.sleep(self.BASE_TICK_RATE)
 
     def get_input(self):
@@ -370,11 +408,20 @@ class Pysnake(object):
         SIZE = self.BOARD_ELEMENT_SIZE
 
         # paint the screen black
-        self.screen.fill(Color.BLACK)
+        #self.screen.fill(Color.BLACK)
+        
+        #blue green background
+        self.screen.fill(Color.BlUE_GREEN)
 
         # draw the apple
-        self.draw_rect(self.board.apple, Color.RED, self.skew)
+        self.draw_rect(Apple.position[-1], Color.RED, self.skew)
 
+        #draw the score on the board
+        self.message = "Score: " + str(Score.score)
+        self.font = pygame.font.Font(None, 20)
+        self.text = self.font.render(self.message, 1, (128,128,128))
+        self.screen.blit(self.text, (20, 20))
+        
         snake = self.board.snake
         for body in snake:
             # draw a snake body part
@@ -397,8 +444,6 @@ class Pysnake(object):
         width_height = (size + x_skew, size + y_skew)
         rect = pygame.Rect(topleft_pixel, width_height)
         pygame.draw.rect(self.screen, color, rect)
-
-
 
 
 def stop_game():
