@@ -47,6 +47,7 @@ class Color(object):
     BLACK     = (000, 000, 000) #for poison apple
     GRAY      = (220, 220, 220) #for bad apple
     BlUE_GREEN = (000,255,204)  #fancy background
+    GOLD        = (255, 215, 0) #power up apple
 
 class Pause():
     """
@@ -64,9 +65,12 @@ class Apple():
     """
     Holds the attributes of apples, such as type, points awarded/deducted, etc
     """
-    apple_type = { "Gray": -10, "Red": 10, "Blue": 20  } #you die if you eat the black apple
-    type = "Red"
-    position = []
+    position = [] #holds the xy position of apple
+    color_dict = {} #holds the color of apple based on xy
+    randint = 0 #holds a number between 0, 1 and 2 that determines apple color spawned
+    #0 - red apple
+    #1 - red apple and gray apple
+    #2 - red apple and black apple
 
 class Board(object):
     """
@@ -127,6 +131,22 @@ class Board(object):
         # it move outwards from it's start place as if it's body exists in the
         # third dimension and is coming onto the game plane.
 
+    def _findEmpty(self, (xpos, ypos), (original_xpos, original_ypos)  ):
+        """
+           Helper function that finds a random spot on the map to place apple(s)
+        """
+        # While that location is inside an object that we do not wish to spawn
+        # apples inside of snakes body, or a position with an existing apple :
+        while (xpos, ypos) in self.snake or (xpos, ypos) in Apple.position:
+            # Increment through board positions
+            xpos, ypos = self.next_pos(xpos, ypos)
+            # If we checked all positions and wrapped around to the original
+            if xpos == original_xpos and ypos == original_ypos:
+                print("Checked the entire board, found no empty spots!")
+                stop_game()
+
+        return (xpos,ypos)
+
     def spawn_apple(self):
         """
         Finds an empty position to spawn an apple, and then places it there.
@@ -144,28 +164,53 @@ class Board(object):
         # Remember this location.
         original_xpos, original_ypos = xpos, ypos
 
-        # While that location is inside an object that we do not wish to spawn
-        # apples inside of snakes body, or a position with an existing apple :
-        while (xpos, ypos) in self.snake or (xpos, ypos) in Apple.position:
-            # Increment through board positions
-            xpos, ypos = self.next_pos(xpos, ypos)
-            # If we checked all positions and wrapped around to the original
-            if xpos == original_xpos and ypos == original_ypos:
-                print("Checked the entire board, found no empty spots!")
-                stop_game()
-
         #if user score is between 0 and 50
         if Score.score < 50:
+            Apple.randint = 0 #for draw_rect to determine apple type
+            (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
             Apple.position.append( (xpos, ypos) )
-            pass
+            Apple.color_dict[(xpos,ypos)] = "Red"
         
         #if user score is between 50 and 100
         if Score.score >= 50 and Score.score < 100:
+            Apple.randint = 0
+            (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
             Apple.position.append( (xpos, ypos) )
+            Apple.color_dict[(xpos,ypos)] = "Red"
+            
+            rand = random.randint(0,1)
+            if rand == 1:
+                Apple.randint = 1 #for draw_rect to determine apple type
+                xpos = random.randint(0, self.size-1)
+                ypos = random.randint(0, self.size-1)
+                (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
+                Apple.position.append( (xpos, ypos) )
+                Apple.color_dict[(xpos,ypos)] = "Gray"
         
         #if user score is above 100
         if Score.score >= 100:
+            Apple.randint = 0 #for draw_rect to determine apple type
+            (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
             Apple.position.append( (xpos, ypos) )
+            Apple.color_dict[(xpos,ypos)] = "Red"
+            
+            rand = random.randint(0,2)
+            
+            if rand == 1:
+                Apple.randint = 1 #for draw_rect to determine apple type
+                xpos = random.randint(0, self.size-1)
+                ypos = random.randint(0, self.size-1)
+                (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
+                Apple.position.append( (xpos, ypos) )
+                Apple.color_dict[(xpos,ypos)] = "Gray"
+            
+            if rand == 2:
+                Apple.randint = 2 #for draw_rect to determine apple type
+                xpos = random.randint(0, self.size-1)
+                ypos = random.randint(0, self.size-1)
+                (xpos, ypos) = self._findEmpty( (xpos,ypos), (original_xpos, original_ypos) )
+                Apple.position.append( (xpos, ypos) )
+                Apple.color_dict[(xpos,ypos)] = "Black"
         
 
     def next_pos(self, xpos, ypos):
@@ -246,10 +291,21 @@ class Board(object):
             #else it was an apple, so spawn a new one
             else:
                 if (xpos, ypos) in Apple.position:
-                    while (xpos, ypos) in Apple.position: Apple.position.remove((xpos,ypos))
-                    Score.score += 10
+                    
+                    if Apple.color_dict[ (xpos,ypos) ] == "Black":
+                        print("You died!")
+                        stop_game()
+                    
+                    while (xpos, ypos) in Apple.position: Apple.position.remove((xpos,ypos)) #remove the apple
+
+                    if Apple.color_dict[ (xpos,ypos) ] == "Red":
+                        Score.score += 10
+                    
+                    if Apple.color_dict[ (xpos,ypos) ] == "Gray":
+                        Score.score -= 10
+                    
+                    Apple.color_dict.pop( (xpos,ypos) ) #remove the apple color entry
                     self.spawn_apple()
-                    # TODO : also increase the game level (up the speed)
 
             #add a new body part at the location
             self.snake.append((xpos, ypos))
@@ -413,8 +469,17 @@ class Pysnake(object):
         #blue green background
         self.screen.fill(Color.BlUE_GREEN)
 
-        # draw the apple
-        self.draw_rect(Apple.position[-1], Color.RED, self.skew)
+        #draw the apples
+        if Apple.randint == 0:
+            self.draw_rect(Apple.position[-1], Color.RED, self.skew)
+        
+        if Apple.randint == 1: #for draw_rect to determine apple type
+            self.draw_rect(Apple.position[-2], Color.RED, self.skew)
+            self.draw_rect(Apple.position[-1], Color.GRAY, self.skew)
+
+        if Apple.randint == 2:
+            self.draw_rect(Apple.position[-2], Color.RED, self.skew)
+            self.draw_rect(Apple.position[-1], Color.BLACK, self.skew)
 
         #draw the score on the board
         self.message = "Score: " + str(Score.score)
